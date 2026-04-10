@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProveIt — Show Your Work</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+–black: #080808;
+–white: #f0ede8;
+–lime: #c8f135;
+–grey: #1a1a1a;
+–mid: #2e2e2e;
+–muted: #6b6b6b;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+background: var(–black);
+color: var(–white);
+font-family: ‘DM Sans’, sans-serif;
+overflow-x: hidden;
+cursor: crosshair;
+}
+
+/* NOISE OVERLAY */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+pointer-events: none;
+z-index: 1000;
+opacity: 0.6;
+}
+
+/* NAV */
+nav {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 28px 48px;
+border-bottom: 1px solid #1f1f1f;
+position: sticky;
+top: 0;
+background: rgba(8,8,8,0.92);
+backdrop-filter: blur(12px);
+z-index: 100;
+}
+
+.logo {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 28px;
+letter-spacing: 3px;
+color: var(–lime);
+}
+
+.nav-tag {
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+color: var(–muted);
+letter-spacing: 2px;
+text-transform: uppercase;
+}
+
+/* HERO */
+.hero {
+min-height: 92vh;
+display: flex;
+flex-direction: column;
+justify-content: center;
+padding: 80px 48px 60px;
+position: relative;
+overflow: hidden;
+}
+
+.hero-eyebrow {
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+letter-spacing: 4px;
+color: var(–lime);
+text-transform: uppercase;
+margin-bottom: 32px;
+opacity: 0;
+animation: fadeUp 0.6s ease forwards 0.1s;
+}
+
+.hero-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(72px, 13vw, 180px);
+line-height: 0.9;
+letter-spacing: 2px;
+margin-bottom: 40px;
+opacity: 0;
+animation: fadeUp 0.7s ease forwards 0.2s;
+}
+
+.hero-title span {
+color: var(–lime);
+display: block;
+}
+
+.hero-sub {
+font-size: clamp(16px, 2vw, 20px);
+font-weight: 300;
+color: #a0a0a0;
+max-width: 520px;
+line-height: 1.6;
+margin-bottom: 52px;
+opacity: 0;
+animation: fadeUp 0.7s ease forwards 0.35s;
+}
+
+.hero-sub strong {
+color: var(–white);
+font-weight: 500;
+}
+
+/* WAITLIST FORM */
+.waitlist-form {
+display: flex;
+gap: 0;
+max-width: 480px;
+opacity: 0;
+animation: fadeUp 0.7s ease forwards 0.5s;
+}
+
+.waitlist-form input {
+flex: 1;
+background: var(–grey);
+border: 1px solid var(–mid);
+border-right: none;
+color: var(–white);
+font-family: ‘DM Sans’, sans-serif;
+font-size: 15px;
+padding: 16px 20px;
+outline: none;
+transition: border-color 0.2s;
+}
+
+.waitlist-form input::placeholder { color: var(–muted); }
+.waitlist-form input:focus { border-color: var(–lime); }
+
+.waitlist-form button {
+background: var(–lime);
+color: var(–black);
+border: none;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 18px;
+letter-spacing: 2px;
+padding: 16px 28px;
+cursor: pointer;
+transition: background 0.2s, transform 0.1s;
+white-space: nowrap;
+}
+
+.waitlist-form button:hover { background: #d4ff3a; }
+.waitlist-form button:active { transform: scale(0.98); }
+
+.form-note {
+font-family: ‘DM Mono’, monospace;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+margin-top: 12px;
+opacity: 0;
+animation: fadeUp 0.7s ease forwards 0.6s;
+}
+
+.success-msg {
+display: none;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 22px;
+letter-spacing: 2px;
+color: var(–lime);
+padding: 16px 0;
+}
+
+/* BG ELEMENT */
+.hero-bg-number {
+position: absolute;
+right: -20px;
+top: 50%;
+transform: translateY(-50%);
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(200px, 30vw, 420px);
+color: #111;
+line-height: 1;
+pointer-events: none;
+user-select: none;
+letter-spacing: -10px;
+}
+
+/* STATS BAR */
+.stats-bar {
+display: flex;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+
+.stat {
+flex: 1;
+padding: 36px 48px;
+border-right: 1px solid #1a1a1a;
+}
+.stat:last-child { border-right: none; }
+
+.stat-num {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 48px;
+color: var(–lime);
+letter-spacing: 2px;
+line-height: 1;
+margin-bottom: 6px;
+}
+
+.stat-label {
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+color: var(–muted);
+letter-spacing: 2px;
+text-transform: uppercase;
+}
+
+/* HOW IT WORKS */
+.section {
+padding: 100px 48px;
+}
+
+.section-label {
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+letter-spacing: 4px;
+color: var(–lime);
+text-transform: uppercase;
+margin-bottom: 48px;
+}
+
+.steps {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 1px;
+background: #1a1a1a;
+border: 1px solid #1a1a1a;
+margin-top: 16px;
+}
+
+.step {
+background: var(–black);
+padding: 48px 40px;
+position: relative;
+transition: background 0.2s;
+}
+
+.step:hover { background: #0f0f0f; }
+
+.step-num {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 80px;
+color: #1d1d1d;
+line-height: 1;
+margin-bottom: 24px;
+}
+
+.step-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 32px;
+letter-spacing: 1px;
+margin-bottom: 14px;
+}
+
+.step-desc {
+font-size: 15px;
+font-weight: 300;
+color: #7a7a7a;
+line-height: 1.7;
+}
+
+/* LEAGUE PREVIEW */
+.league-section {
+padding: 100px 48px;
+background: #050505;
+border-top: 1px solid #1a1a1a;
+}
+
+.leagues {
+display: flex;
+gap: 12px;
+margin-top: 48px;
+flex-wrap: wrap;
+}
+
+.league-card {
+flex: 1;
+min-width: 140px;
+border: 1px solid #222;
+padding: 28px 24px;
+position: relative;
+transition: border-color 0.2s, transform 0.2s;
+}
+
+.league-card:hover {
+border-color: var(–lime);
+transform: translateY(-4px);
+}
+
+.league-card.active {
+border-color: var(–lime);
+background: rgba(200, 241, 53, 0.04);
+}
+
+.league-icon {
+font-size: 32px;
+margin-bottom: 12px;
+}
+
+.league-name {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 22px;
+letter-spacing: 2px;
+margin-bottom: 6px;
+}
+
+.league-desc {
+font-family: ‘DM Mono’, monospace;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+line-height: 1.6;
+}
+
+.league-card.locked .league-name,
+.league-card.locked .league-icon { opacity: 0.3; }
+
+.lock-tag {
+font-family: ‘DM Mono’, monospace;
+font-size: 9px;
+letter-spacing: 2px;
+color: var(–muted);
+text-transform: uppercase;
+margin-top: 10px;
+}
+
+/* PAYWALL CALLOUT */
+.paywall-section {
+padding: 100px 48px;
+border-top: 1px solid #1a1a1a;
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 80px;
+align-items: center;
+}
+
+.paywall-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(48px, 6vw, 80px);
+line-height: 0.95;
+letter-spacing: 1px;
+margin-bottom: 24px;
+}
+
+.paywall-title span { color: var(–lime); }
+
+.paywall-desc {
+font-size: 16px;
+font-weight: 300;
+color: #7a7a7a;
+line-height: 1.8;
+margin-bottom: 40px;
+}
+
+.tiers {
+display: flex;
+flex-direction: column;
+gap: 1px;
+background: #1a1a1a;
+border: 1px solid #1a1a1a;
+}
+
+.tier {
+background: var(–black);
+padding: 32px 36px;
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+gap: 20px;
+}
+
+.tier.pro { background: #0c0c0c; }
+
+.tier-name {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 24px;
+letter-spacing: 2px;
+margin-bottom: 8px;
+}
+
+.tier.pro .tier-name { color: var(–lime); }
+
+.tier-features {
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+color: var(–muted);
+letter-spacing: 0.5px;
+line-height: 1.9;
+}
+
+.tier-price {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 36px;
+letter-spacing: 1px;
+white-space: nowrap;
+color: var(–white);
+}
+
+.tier.pro .tier-price { color: var(–lime); }
+
+.tier-period {
+font-family: ‘DM Mono’, monospace;
+font-size: 10px;
+color: var(–muted);
+text-align: right;
+margin-top: 2px;
+}
+
+/* CTA FOOTER */
+.cta-footer {
+padding: 120px 48px;
+text-align: center;
+border-top: 1px solid #1a1a1a;
+position: relative;
+overflow: hidden;
+}
+
+.cta-footer::before {
+content: ‘’;
+position: absolute;
+bottom: -200px;
+left: 50%;
+transform: translateX(-50%);
+width: 600px;
+height: 600px;
+background: radial-gradient(circle, rgba(200,241,53,0.06) 0%, transparent 70%);
+pointer-events: none;
+}
+
+.cta-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(56px, 8vw, 110px);
+line-height: 0.95;
+letter-spacing: 2px;
+margin-bottom: 32px;
+}
+
+.cta-title span { color: var(–lime); }
+
+.cta-form {
+display: flex;
+gap: 0;
+max-width: 440px;
+margin: 0 auto 16px;
+}
+
+.cta-form input {
+flex: 1;
+background: var(–grey);
+border: 1px solid var(–mid);
+border-right: none;
+color: var(–white);
+font-family: ‘DM Sans’, sans-serif;
+font-size: 15px;
+padding: 16px 20px;
+outline: none;
+text-align: center;
+transition: border-color 0.2s;
+}
+
+.cta-form input:focus { border-color: var(–lime); }
+.cta-form input::placeholder { color: var(–muted); }
+
+.cta-form button {
+background: var(–lime);
+color: var(–black);
+border: none;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 18px;
+letter-spacing: 2px;
+padding: 16px 28px;
+cursor: pointer;
+transition: background 0.2s;
+}
+
+.cta-form button:hover { background: #d4ff3a; }
+
+.cta-note {
+font-family: ‘DM Mono’, monospace;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+}
+
+.cta-success {
+display: none;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 24px;
+letter-spacing: 3px;
+color: var(–lime);
+margin: 16px 0;
+}
+
+/* FOOTER */
+footer {
+padding: 24px 48px;
+border-top: 1px solid #1a1a1a;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.footer-logo {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 20px;
+letter-spacing: 3px;
+color: var(–lime);
+}
+
+.footer-note {
+font-family: ‘DM Mono’, monospace;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+}
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(24px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+nav { padding: 20px 24px; }
+.hero { padding: 60px 24px 40px; }
+.hero-bg-number { display: none; }
+.stats-bar { flex-direction: column; }
+.stat { border-right: none; border-bottom: 1px solid #1a1a1a; padding: 24px; }
+.stat:last-child { border-bottom: none; }
+.section, .league-section { padding: 60px 24px; }
+.steps { grid-template-columns: 1fr; }
+.paywall-section { grid-template-columns: 1fr; padding: 60px 24px; gap: 40px; }
+.cta-footer { padding: 80px 24px; }
+footer { padding: 20px 24px; flex-direction: column; gap: 8px; text-align: center; }
+.waitlist-form { flex-direction: column; }
+.waitlist-form input { border-right: 1px solid var(–mid); border-bottom: none; }
+.waitlist-form input:focus { border-color: var(–lime); }
+.cta-form { flex-direction: column; }
+.cta-form input { border-right: 1px solid var(–mid); border-bottom: none; text-align: left; }
+}
+</style>
+
+</head>
+<body>
+
+<nav>
+  <div class="logo">PROVEIT</div>
+  <div class="nav-tag">Launching Soon</div>
+</nav>
+
+<!-- HERO -->
+
+<section class="hero">
+  <div class="hero-eyebrow">// The gym app that doesn't lie to you</div>
+  <h1 class="hero-title">
+    IS IT<br>
+    <span>ACTUALLY</span>
+    WORKING?
+  </h1>
+  <p class="hero-sub">
+    Weekly AI body scans track your <strong>real physical progress</strong> — not your workouts, your body. Compete in leagues. Climb divisions. <strong>Finally know.</strong>
+  </p>
+  <div class="waitlist-form">
+    <input type="email" id="hero-email" placeholder="your@email.com" />
+    <button onclick="joinWaitlist('hero')">JOIN WAITLIST</button>
+  </div>
+  <div class="success-msg" id="hero-success">YOU'RE IN. WE'LL BE IN TOUCH. 🔥</div>
+  <p class="form-note" id="hero-note">// NO SPAM. EARLY ACCESS ONLY.</p>
+  <div class="hero-bg-number">100%</div>
+</section>
+
+<!-- STATS -->
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">7</div>
+    <div class="stat-label">Day check-in cycle</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">10</div>
+    <div class="stat-label">People per league</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">5</div>
+    <div class="stat-label">League tiers</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">0</div>
+    <div class="stat-label">Excuses accepted</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+
+<section class="section">
+  <div class="section-label">// How it works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">CHECK IN WEEKLY</div>
+      <p class="step-desc">Take a quick body scan photo every 7 days. Same angle, same time. The AI does the rest.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">GET YOUR SCORE</div>
+      <p class="step-desc">AI measures real changes — muscle definition, body composition, posture. Gives you a weekly progress score with zero fluff.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">CLIMB THE LEAGUE</div>
+      <p class="step-desc">Your score puts you in a league of 10 people at your exact same stage. Compete weekly. Rise or fall based on real progress.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LEAGUES -->
+
+<section class="league-section">
+  <div class="section-label">// League tiers</div>
+  <div class="leagues">
+    <div class="league-card">
+      <div class="league-icon">⚔️</div>
+      <div class="league-name">BRONZE</div>
+      <div class="league-desc">Starting point.<br>Everyone begins here.</div>
+    </div>
+    <div class="league-card">
+      <div class="league-icon">🔩</div>
+      <div class="league-name">IRON</div>
+      <div class="league-desc">First 4 weeks<br>of real progress.</div>
+    </div>
+    <div class="league-card active">
+      <div class="league-icon">⚡</div>
+      <div class="league-name">GOLD</div>
+      <div class="league-desc">Consistent.<br>Noticeable change.</div>
+    </div>
+    <div class="league-card locked">
+      <div class="league-icon">💎</div>
+      <div class="league-name">DIAMOND</div>
+      <div class="league-desc">Elite progress.<br>Top 10% of users.</div>
+      <div class="lock-tag">🔒 PRO ONLY</div>
+    </div>
+    <div class="league-card locked">
+      <div class="league-icon">👑</div>
+      <div class="league-name">LEGEND</div>
+      <div class="league-desc">Top 1%.<br>Featured publicly.</div>
+      <div class="lock-tag">🔒 PRO ONLY</div>
+    </div>
+  </div>
+</section>
+
+<!-- PAYWALL -->
+
+<section class="paywall-section">
+  <div>
+    <div class="section-label">// Pricing</div>
+    <h2 class="paywall-title">FREE<br>GETS YOU<br><span>STARTED.</span><br>PRO KEEPS<br>YOU <span>HONEST.</span></h2>
+    <p class="paywall-desc">The free tier shows you your score. Pro shows you everything — and makes sure you never fall off.</p>
+  </div>
+  <div class="tiers">
+    <div class="tier">
+      <div>
+        <div class="tier-name">FREE</div>
+        <div class="tier-features">
+          Weekly body scan ✓<br>
+          Basic progress score ✓<br>
+          Bronze + Iron leagues ✓<br>
+          Full data — ✗<br>
+          Streak protection — ✗<br>
+          Diamond + Legend — ✗
+        </div>
+      </div>
+      <div>
+        <div class="tier-price">$0</div>
+        <div class="tier-period">forever</div>
+      </div>
+    </div>
+    <div class="tier pro">
+      <div>
+        <div class="tier-name">PRO ⚡</div>
+        <div class="tier-features">
+          Everything in free ✓<br>
+          Full progress breakdown ✓<br>
+          All 5 leagues ✓<br>
+          1 streak shield/month ✓<br>
+          Verified badge ✓<br>
+          Featured if you hit Legend ✓
+        </div>
+      </div>
+      <div>
+        <div class="tier-price">$8.99</div>
+        <div class="tier-period">per month</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FOOTER -->
+
+<section class="cta-footer">
+  <h2 class="cta-title">STOP<br><span>GUESSING.</span><br>START<br>PROVING.</h2>
+  <div class="cta-form">
+    <input type="email" id="cta-email" placeholder="your@email.com" />
+    <button onclick="joinWaitlist('cta')">I'M IN</button>
+  </div>
+  <div class="cta-success" id="cta-success">YOU'RE ON THE LIST. 🔥</div>
+  <p class="cta-note">// EARLY ACCESS — NO SPAM — CANCEL ANYTIME</p>
+</section>
+
+<footer>
+  <div class="footer-logo">PROVEIT</div>
+  <div class="footer-note">// © 2026 PROVEIT. ALL RIGHTS RESERVED.</div>
+</footer>
+
+<script>
+  // Simple waitlist handler — swap this out for a real backend (Mailchimp, Supabase, etc.)
+  const emails = [];
+
+  function joinWaitlist(source) {
+    const input = document.getElementById(source === 'hero' ? 'hero-email' : 'cta-email');
+    const email = input.value.trim();
+
+    if (!email || !email.includes('@')) {
+      input.style.borderColor = '#ff4444';
+      setTimeout(() => input.style.borderColor = '', 1000);
+      return;
+    }
+
+    emails.push(email);
+
+    if (source === 'hero') {
+      document.querySelector('.waitlist-form').style.display = 'none';
+      document.getElementById('hero-success').style.display = 'block';
+      document.getElementById('hero-note').style.display = 'none';
+    } else {
+      document.querySelector('.cta-form').style.display = 'none';
+      document.getElementById('cta-success').style.display = 'block';
+    }
+
+    fetch('https://formspree.io/f/mjgpqkeb', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    });
+  }
+
+  // Allow enter key
+  document.querySelectorAll('input[type="email"]').forEach(input => {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const source = input.id === 'hero-email' ? 'hero' : 'cta';
+        joinWaitlist(source);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
